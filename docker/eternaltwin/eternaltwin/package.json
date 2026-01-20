@@ -1,0 +1,19 @@
+{
+  "name": "@eternal-twin/emush-monorepo",
+  "version": "0.0.1",
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "scripts": {
+    "eternaltwin": "eternaltwin",
+    "etwin": "eternaltwin"
+  },
+  "devDependencies": {
+    "@eternaltwin/cli": "^0.16.4"
+  },
+  "workspaces": {
+    "packages": [
+      "App"
+    ]
+  },
+  "packageManager": "yarn@4.9.3"
+}

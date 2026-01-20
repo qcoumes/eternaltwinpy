@@ -1,0 +1,19 @@
+services:
+  eternaltwin:
+    container_name: eternaltwin
+    build:
+      context: eternaltwin
+      dockerfile: Dockerfile
+    volumes:
+      - ./eternaltwin/eternaltwin:/www
+    stdin_open: true
+    tty: true
+    ports:
+      - "50320:50320"
+    command: [ "bash", "-c", "./entrypoint.sh" ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "localhost:50320/" ]
+      start_period: 10s
+      interval: 30s
+      retries: 2
+      timeout: 1s

@@ -1,0 +1,201 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+      - '*.*.*'
+
+  pull_request:
+    branches:
+      - main
+      - '*.*.*'
+
+  release:
+    types: [ published ]
+
+jobs:
+
+  autoflake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.13'
+
+      - name: Install packages
+        run: poetry install --all-extras
+
+      - name: Autoflake
+        run: autoflake eternaltwin/ tests/ -r -c
+
+
+  isort:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.13'
+
+      - name: Install packages
+        run: poetry install --all-extras
+
+      - name: Isort
+        run: isort --check eternaltwin/ tests/
+
+
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.13'
+
+      - name: Install packages
+        run: poetry install --all-extras
+
+      - name: Black
+        run: black --check -l 120 eternaltwin/ tests/
+
+
+  pycodestyle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.13'
+
+      - name: Install packages
+        run: poetry install --all-extras
+
+      - name: Pycodestyle
+        run: pycodestyle eternaltwin/ tests/
+
+
+  pydocstyle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.13'
+
+      - name: Install packages
+        run: poetry install --all-extras
+
+      - name: Pydocstyle
+        run: pydocstyle --count eternaltwin/
+
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.13'
+
+      - name: Install packages
+        run: poetry install --all-extras
+
+      - name: Mypy
+        run: mypy eternaltwin --disallow-untyped-def
+
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: '3.13'
+
+      - name: Install packages
+        run: poetry install --all-extras
+
+      - name: Bandit
+        run: bandit --ini=setup.cfg -ll 2> /dev/null
+
+
+  test:
+    needs: [autoflake, isort, black, pycodestyle, pydocstyle, mypy, bandit]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.10', '3.11', '3.12', '3.13', '3.14' ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@master
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install packages
+        run: |
+          - poetry install
+
+      - name: Run tests
+        run: |
+          - python3 -m pytest -vvv -ss --color=yes --durations=0 --durations-min=1.0 --cov=. --cov-report term
+          - coverage xml
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == 3.14
+        uses: codecov/codecov-action@v5
+        with:
+          file: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  publish:
+    needs: test
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    environment:
+      name: pypi
+      url: https://pypi.org/p/eternaltwinpy
+    permissions:
+        id-token: write
+
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Build the package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+
+      - name: Verify metadata
+        run: |
+          python -m pip install twine
+          python -m twine check dist/*
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

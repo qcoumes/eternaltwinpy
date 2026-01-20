@@ -1,0 +1,16 @@
+[backend]
+store = "Memory"
+
+[seed.app.python_client]
+display_name = "Python Client"
+uri = "http://localhost:8000/"
+oauth_callback = "http://localhost:8000/oauth/callback"
+secret = "dev_secret"
+
+[seed.user.user1]
+username = "user1"
+password = "1234567891"
+
+[seed.user.user2]
+username = "user2"
+password = "1234567891"
