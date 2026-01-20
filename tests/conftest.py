@@ -1,3 +1,4 @@
+import os
 import time
 from urllib.parse import parse_qs, urljoin, urlparse
 
@@ -12,7 +13,7 @@ from eternaltwin.states import State
 from eternaltwin.tokens import Token
 
 # Correspond to the EternalTwin instance in docker/docker-compose.yml
-ETWIN_URL = "http://localhost:50320"
+ETWIN_URL = f"http://localhost:{os.getenv('ETWIN_PORT', 50320)}"
 ETWIN_CLIENT_ID = "python_client@clients"
 ETWIN_CLIENT_SECRET = "dev_secret"
 ETWIN_REDIRECT_URL = "http://localhost:8000/oauth/callback"

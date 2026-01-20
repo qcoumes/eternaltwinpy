@@ -24,13 +24,15 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Install packages
-        run: poetry install --all-extras
+        run: |
+          pip3 install poetry
+          poetry install --all-extras
 
       - name: Autoflake
-        run: autoflake eternaltwin/ tests/ -r -c
+        run: poetry run autoflake eternaltwin/ tests/ -r -c
 
 
   isort:
@@ -41,13 +43,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Install packages
-        run: poetry install --all-extras
+        run: |
+          pip3 install poetry
+          poetry install --all-extras
+
 
       - name: Isort
-        run: isort --check eternaltwin/ tests/
+        run: poetry run isort --check eternaltwin/ tests/
 
 
   black:
@@ -58,13 +63,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Install packages
-        run: poetry install --all-extras
+        run: |
+          pip3 install poetry
+          poetry install --all-extras
+
 
       - name: Black
-        run: black --check -l 120 eternaltwin/ tests/
+        run: poetry run black --check -l 120 eternaltwin/ tests/
 
 
   pycodestyle:
@@ -75,13 +83,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Install packages
-        run: poetry install --all-extras
+        run: |
+          pip3 install poetry
+          poetry install --all-extras
+
 
       - name: Pycodestyle
-        run: pycodestyle eternaltwin/ tests/
+        run: poetry run pycodestyle eternaltwin/ tests/
 
 
   pydocstyle:
@@ -92,13 +103,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Install packages
-        run: poetry install --all-extras
+        run: |
+          pip3 install poetry
+          poetry install --all-extras
+
 
       - name: Pydocstyle
-        run: pydocstyle --count eternaltwin/
+        run: poetry run pydocstyle --count eternaltwin/
 
 
   mypy:
@@ -109,13 +123,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Install packages
-        run: poetry install --all-extras
+        run: |
+          pip3 install poetry
+          poetry install --all-extras
+
 
       - name: Mypy
-        run: mypy eternaltwin --disallow-untyped-def
+        run: poetry run mypy eternaltwin --disallow-untyped-def
 
 
   bandit:
@@ -126,13 +143,16 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@master
         with:
-          python-version: '3.13'
+          python-version: '3.14'
 
       - name: Install packages
-        run: poetry install --all-extras
+        run: |
+          pip3 install poetry
+          poetry install --all-extras
+
 
       - name: Bandit
-        run: bandit --ini=setup.cfg -ll 2> /dev/null
+        run: poetry run bandit --ini=setup.cfg -ll 2> /dev/null
 
 
   test:
@@ -140,7 +160,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.10', '3.11', '3.12', '3.13', '3.14' ]
+        python-version: [ '3.11', '3.12', '3.13', '3.14' ]
 
     steps:
       - uses: actions/checkout@v4
@@ -150,14 +170,30 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Start EternalTwin server
+        run: |
+          export GID=$(id -g)
+          export ETWIN_PORT=$((50320 + ${{ matrix.python-version }}))
+          docker compose -f docker/docker-compose.yml up --build -d
+
       - name: Install packages
         run: |
-          - poetry install
+          pip3 install poetry
+          poetry install --all-extras
+
+      - name: Wait for EternalTwin to start
+        run: |
+          if ! timeout 120 bash -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" eternaltwin)" == "healthy" ]; do sleep 2; done'; then
+            echo "Container failed to become healthy within 300 seconds"
+            docker logs eternaltwin
+            exit 1
+          fi
 
       - name: Run tests
         run: |
-          - python3 -m pytest -vvv -ss --color=yes --durations=0 --durations-min=1.0 --cov=. --cov-report term
-          - coverage xml
+          export ETWIN_PORT=$((50320 + ${{ matrix.python-version }}))
+          poetry run pytest -vvv -ss --color=yes --durations=0 --durations-min=1.0 --cov=. --cov-report term
+          poetry run coverage xml
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == 3.14

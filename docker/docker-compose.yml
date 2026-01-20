@@ -4,12 +4,14 @@ services:
     build:
       context: eternaltwin
       dockerfile: Dockerfile
-    volumes:
-      - ./eternaltwin/eternaltwin:/www
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    user: "${UID:-1000}:${GID:-1000}"
     stdin_open: true
     tty: true
     ports:
-      - "50320:50320"
+      - "${ETWIN_PORT:-50320}:50320"
     command: [ "bash", "-c", "./entrypoint.sh" ]
     healthcheck:
       test: [ "CMD", "curl", "-f", "localhost:50320/" ]
