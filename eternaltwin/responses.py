@@ -16,16 +16,16 @@ class Response:
 
     @classmethod
     def from_requests(cls, response: requests.Response) -> Self:
-        """Create a Response from a requests.Response."""
+        """Create a Response from a `requests.Response`."""
         return cls(response.url, response.status_code, response.content, response.headers)
 
     @classmethod
     async def from_aiohttp(cls, response: aiohttp.ClientResponse) -> Self:
-        """Create a Response from a aiohttp.ClientResponse."""
+        """Create a Response from a `aiohttp.ClientResponse`."""
         return cls(str(response.url), response.status, await response.read(), response.headers)
 
     def json(self) -> dict[str, Any]:
-        """Return the content as a json."""
+        """Interpret the response content as JSON and return the resulting dict."""
         return json.loads(self.content.decode())
 
     def __repr__(self) -> str:

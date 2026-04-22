@@ -29,7 +29,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
       - name: Autoflake
         run: poetry run autoflake eternaltwin/ tests/ -r -c
@@ -48,7 +48,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
 
       - name: Isort
@@ -68,7 +68,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
 
       - name: Black
@@ -88,7 +88,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
 
       - name: Pycodestyle
@@ -108,7 +108,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
 
       - name: Pydocstyle
@@ -128,7 +128,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
 
       - name: Mypy
@@ -148,7 +148,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
 
       - name: Bandit
@@ -179,7 +179,7 @@ jobs:
       - name: Install packages
         run: |
           pip3 install poetry
-          poetry install --all-extras
+          poetry install --all-extras --no-root
 
       - name: Wait for EternalTwin to start
         run: |

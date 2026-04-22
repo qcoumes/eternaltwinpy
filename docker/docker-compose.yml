@@ -12,9 +12,8 @@ services:
     tty: true
     ports:
       - "${ETWIN_PORT:-50320}:50320"
-    command: [ "bash", "-c", "./entrypoint.sh" ]
     healthcheck:
-      test: [ "CMD", "curl", "-f", "localhost:50320/" ]
+      test: [ "CMD", "curl", "-f", "localhost:50320/api/v1/users?limit=0" ]
       start_period: 10s
       interval: 30s
       retries: 2

@@ -1,24 +1,27 @@
 import copy
 from typing import Any, Generic, Type, TypeVar
 
-from eternaltwin.clients.abc import ClientABC
-from eternaltwin.clients.asyncio import Eternaltwin as AsyncEternaltwin
-from eternaltwin.clients.sync import Eternaltwin
+from eternaltwin.clients.abc.clients import ClientABC
+from eternaltwin.clients.asyncio.clients import Eternaltwin as AsyncEternaltwin
+from eternaltwin.clients.sync.clients import Eternaltwin
 
-C = TypeVar("C", bound=ClientABC)
+Client = TypeVar("Client", bound=ClientABC)
 
 
-class Connections(Generic[C]):
+__all__ = ["connections", "async_connections", "configure", "Connections"]
+
+
+class Connections(Generic[Client]):
     """Holds connections to different EternalTwin API."""
 
-    def __init__(self, client_class: Type[C]) -> None:
+    def __init__(self, client_class: Type[Client]) -> None:
         self._client_class = client_class
-        self._client: dict[str, C] = {}
+        self._client: dict[str, Client] = {}
 
-    def __getitem__(self, alias: str) -> C:
+    def __getitem__(self, alias: str) -> Client:
         return self._client[alias]
 
-    def __setitem__(self, alias: str, client: C) -> None:
+    def __setitem__(self, alias: str, client: Client) -> None:
         self._client[alias] = client
 
     def __delitem__(self, alias: str) -> None:
@@ -28,7 +31,8 @@ class Connections(Generic[C]):
         """Configure multiple clients at once.
 
         Useful for passing in config dictionaries obtained from other sources,
-        like Django's settings or a configuration management tool.
+        like Django's settings or a configuration management tool. Overwrite
+        all existing connections.
 
         Examples
         --------
@@ -38,6 +42,7 @@ class Connections(Generic[C]):
                 'url': 'https://eternaltwin.org/api/v1/',
                 'client_id': "myclient",
                 'client_secret': 'mysecret',
+                'state_key': HS256Key("mykey"),
                 'redirect_uri': 'https://myapp.com/callback',
             },
             "test": {
@@ -45,14 +50,16 @@ class Connections(Generic[C]):
                 'client_id': "myclient",
                 'client_secret': 'mysecret',
                 'redirect_uri': 'https://localhost:8080/callback',
-                'private_key': 'bar',
+                'state_key': HS256Key("mykey"),
                 'timeout': 1,
                 'verify_ssl': False,
                 'allow_redirects': True,
             }
         }
         connections.configure(**ETERNALTWIN_CONFIG)
+        ```
         """
+        self._client.clear()
         for k, v in kwargs.items():
             self.create_connection(k, **v)
 
@@ -61,19 +68,23 @@ class Connections(Generic[C]):
         client = self._client[alias] = self._client_class(**kwargs)
         return client
 
-    def get_connection(self, alias: str = "default") -> C:
+    def get_connection(self, alias: str = None) -> Client:
         """Return the client corresponding to alias."""
-        return self._client[alias]
+        try:
+            return self._client[alias or "default"]
+        except KeyError:
+            raise KeyError(f"No connection found for alias '{alias or 'default'}'.")
 
     add_connection = __setitem__
 
     remove_connection = __delitem__
 
 
-# Using a global instances holding all the connections allows to easily reuse
-# them across an application.
-connections = Connections(Eternaltwin)
-async_connections = Connections(AsyncEternaltwin)
+connections: Connections[Eternaltwin] = Connections(Eternaltwin)
+"""Global instance holding all the synchronous connections configured with `configure()`."""
+
+async_connections: Connections[AsyncEternaltwin] = Connections(AsyncEternaltwin)
+"""Global instance holding all the asynchronous connections configured with `configure()`."""
 
 
 def configure(**kwargs: Any) -> None:  # pragma: no cover

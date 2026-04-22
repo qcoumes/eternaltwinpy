@@ -5,28 +5,34 @@ from urllib.parse import parse_qs, urljoin, urlparse
 import pytest
 import requests
 
-from eternaltwin.clients.abc import ClientABC
-from eternaltwin.clients.asyncio import Eternaltwin as AsyncEternaltwin
-from eternaltwin.clients.sync import Eternaltwin
+from eternaltwin.clients.abc.clients import ClientABC
+from eternaltwin.clients.asyncio.clients import Eternaltwin as AsyncEternaltwin
+from eternaltwin.clients.sync.clients import Eternaltwin
 from eternaltwin.keys import EdDSAKey, ES256Key, HS256Key, PS256Key, RS256Key
-from eternaltwin.states import State
+from eternaltwin.states import _generate_nonce
 from eternaltwin.tokens import Token
 
 # Correspond to the EternalTwin instance in docker/docker-compose.yml
-ETWIN_URL = f"http://localhost:{os.getenv('ETWIN_PORT', 50320)}"
+ETWIN_SCHEME = "http"
+ETWIN_HOST = "localhost"
+ETWIN_PORT = os.getenv("ETWIN_PORT", 50320)
+ETWIN_URL = f"{ETWIN_SCHEME}://{ETWIN_HOST}:{ETWIN_PORT}/"
 ETWIN_CLIENT_ID = "python_client@clients"
 ETWIN_CLIENT_SECRET = "dev_secret"
 ETWIN_REDIRECT_URL = "http://localhost:8000/oauth/callback"
 
 # Dummy parameters for testing purpose
-ETWIN_DUMMY_URL = "http://localhost:50322"
+ETWIN_DUMMY_SCHEME = "http"
+ETWIN_DUMMY_HOST = "localhost"
+ETWIN_DUMMY_PORT = 50322
+ETWIN_DUMMY_URL = f"{ETWIN_DUMMY_SCHEME}://{ETWIN_DUMMY_HOST}:{ETWIN_DUMMY_PORT}/"
 ETWIN_DUMMY_CLIENT_ID = "myclient"
 ETWIN_DUMMY_CLIENT_SECRET = "mysecret"
 ETWIN_DUMMY_REDIRECT_URL = "http://localhost:8081/oauth/callback"
 
 # Users defined in docker/eternaltwin/eternatwin/eternaltwin.dev.toml
 ETWIN_USER1_USERNAME = "user1"
-ETWIN_USER1_PASSWORD = "31323334353637383931"  # Works for password "1234567891", probably a hashed by the ET client
+ETWIN_USER1_PASSWORD = "31323334353637383931"  # Works for password "1234567891", probably hashed by the ET client
 ETWIN_USER2_USERNAME = "user2"
 ETWIN_USER2_PASSWORD = "31323334353637383932"
 
@@ -38,50 +44,64 @@ def _get_authorization_code(client: ClientABC, username: str, password: str) -> 
         json={"login": username, "password": password},
     ).cookies["sid"]
 
-    # Send a request using authentication URL with the session_id cookie. It
+    # Send a request using authorization URL with the session_id cookie. It
     # will immediately try to redirect the the redirect_uri with the
     # authorization code in the query params since the user is already
     # authenticated.
-    key = HS256Key("secret")
-    state = State.new(client.url, key)
-    url = client.authentication_url(state)
+    state = client.generate_state()
+    url = client.authorization_url(state)
     r = requests.get(url, cookies={"sid": session_id}, allow_redirects=False)
 
     # Parse location header to get "code" query param and check state is the
     # same
     query_params = parse_qs(urlparse(r.headers["Location"]).query)
-    assert state == State.from_jwt(query_params["state"][0], client.url, key)
+    client.validate_state(query_params["state"][0], state)
     return query_params["code"][0]
 
 
-def _get_token(client: ClientABC, username: str, password: str) -> Token:
+def _get_token(client: Eternaltwin, username: str, password: str) -> Token:
     authorization_code = _get_authorization_code(client, username, password)
-    return client.authenticate(authorization_code=authorization_code)
+    return client.token(authorization_code)
 
 
 @pytest.fixture
-def client() -> Eternaltwin:
+def configuration(hs256_key):
+    """Fixture a valid dictionary that can be passed to `configure()`."""
+    return {
+        "default": {
+            "url": ETWIN_URL,
+            "client_id": ETWIN_CLIENT_ID,
+            "client_secret": ETWIN_CLIENT_SECRET,
+            "redirect_uri": ETWIN_REDIRECT_URL,
+            "state_key": hs256_key,
+        }
+    }
+
+
+@pytest.fixture
+def client(hs256_key) -> Eternaltwin:
     """Fixture for an Eternaltwin client."""
-    return Eternaltwin(ETWIN_URL, ETWIN_CLIENT_ID, ETWIN_CLIENT_SECRET, ETWIN_REDIRECT_URL)
+    return Eternaltwin(ETWIN_CLIENT_ID, ETWIN_CLIENT_SECRET, ETWIN_REDIRECT_URL, hs256_key, url=ETWIN_URL)
 
 
 @pytest.fixture
-def async_client() -> AsyncEternaltwin:
+def async_client(hs256_key) -> AsyncEternaltwin:
     """Fixture for an async Eternaltwin client."""
-    return AsyncEternaltwin(ETWIN_URL, ETWIN_CLIENT_ID, ETWIN_CLIENT_SECRET, ETWIN_REDIRECT_URL)
+    return AsyncEternaltwin(ETWIN_CLIENT_ID, ETWIN_CLIENT_SECRET, ETWIN_REDIRECT_URL, hs256_key, url=ETWIN_URL)
 
 
 @pytest.fixture
 def payload():
     """Fixture for a state payload to be used in tests."""
     timestamp = int(time.time())
-    return {"a": "authorize", "as": ETWIN_URL, "iat": timestamp, "rfp": timestamp, "exp": timestamp + 600}
-
-
-@pytest.fixture
-def state(hs256_key):
-    """Fixture for a state to be used in tests."""
-    return State.new(ETWIN_URL, hs256_key)
+    return {
+        "a": "authorize",
+        "as": ETWIN_URL,
+        "iat": timestamp,
+        "rfp": timestamp,
+        "exp": timestamp + 600,
+        "nonce": _generate_nonce(128),
+    }
 
 
 @pytest.fixture
@@ -105,13 +125,13 @@ def user2_authorization_code(client: ClientABC) -> str:
 
 
 @pytest.fixture
-def user1_access_token(client: ClientABC) -> Token:
+def user1_token(client: Eternaltwin) -> Token:
     """Fixture to get a token for user1."""
     return _get_token(client, ETWIN_USER1_USERNAME, ETWIN_USER1_PASSWORD)
 
 
 @pytest.fixture
-def user2_access_token(client: ClientABC) -> Token:
+def user2_token(client: Eternaltwin) -> Token:
     """Fixture to get a token for user2."""
     return _get_token(client, ETWIN_USER2_USERNAME, ETWIN_USER2_PASSWORD)
 
