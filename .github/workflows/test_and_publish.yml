@@ -183,7 +183,7 @@ jobs:
 
       - name: Wait for EternalTwin to start
         run: |
-          if ! timeout 120 bash -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" eternaltwin)" == "healthy" ]; do sleep 2; done'; then
+          if ! timeout 300 bash -c 'until [ "$(docker inspect --format="{{.State.Health.Status}}" eternaltwin)" == "healthy" ]; do sleep 2; done'; then
             echo "Container failed to become healthy within 300 seconds"
             docker logs eternaltwin
             exit 1
