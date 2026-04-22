@@ -1,0 +1,89 @@
+site_name: eternaltwinpy
+site_author: qcoumes
+repo_url: https://github.com/qcoumes/eternaltwinpy
+repo_name: qcoumes/eternaltwinpy
+docs_dir: docs/
+use_directory_urls: true
+
+theme:
+  name: material
+  logo: img/logo.svg
+  favicon:  img/logo.svg
+  palette:
+    scheme: slate
+    primary: custom
+    accent: red
+  features:
+    - navigation.tracking
+    - navigation.sections
+    - search.suggest
+
+extra_css:
+  - css/misc.css
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: false
+            allow_inspection: true
+            show_root_members_full_path: true
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_root_heading: false
+            show_root_toc_entry: false
+            members_order: source
+            line_length: 80
+
+markdown_extensions:
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      noclasses: true
+      pygments_style: monokai
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+
+nav:
+  - Quickstart: index.md
+
+  - "Usage":
+      - Installation: usage_installation.md
+      - Configuration: usage_configuration.md
+      - OAuth2 Authorization: usage_oauth2.md
+      - Working with Users: usage_users.md
+
+  - "High-level API Reference":
+      - Connections: api_connections.md
+      - User: api_users.md
+      - Exceptions: api_exceptions.md
+
+  - "Low-level API Reference":
+      - Clients:
+          - Eternaltwin: api_clients.md
+          - Subclients:
+              - Users: api_clients_users.md
+      - Response: api_response.md
+      - State Keys: api_keys.md
+      - State: api_states.md
+      - Token: api_tokens.md
+
+  - "Other":
+      - "Github": https://github.com/qcoumes/eternaltwinpy
+      - "EternalTwin Website": https://eternaltwin.org
+      - "EternalTwin Discord": https://discord.gg/eternaltwin
+      - Contributing: CONTRIBUTING.md
+      - Changelog: CHANGELOG.md
+      - License: LICENSE.md
