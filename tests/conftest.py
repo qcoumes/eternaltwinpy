@@ -1,5 +1,7 @@
 import os
+import secrets
 import time
+from pathlib import Path
 from urllib.parse import parse_qs, urljoin, urlparse
 
 import pytest
@@ -64,7 +66,7 @@ def _get_token(client: Eternaltwin, username: str, password: str) -> Token:
     return client.token(authorization_code)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def configuration(hs256_key):
     """Fixture a valid dictionary that can be passed to `configure()`."""
     return {
@@ -78,13 +80,13 @@ def configuration(hs256_key):
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def client(hs256_key) -> Eternaltwin:
     """Fixture for an Eternaltwin client."""
     return Eternaltwin(ETWIN_CLIENT_ID, ETWIN_CLIENT_SECRET, ETWIN_REDIRECT_URL, hs256_key, url=ETWIN_URL)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def async_client(hs256_key) -> AsyncEternaltwin:
     """Fixture for an async Eternaltwin client."""
     return AsyncEternaltwin(ETWIN_CLIENT_ID, ETWIN_CLIENT_SECRET, ETWIN_REDIRECT_URL, hs256_key, url=ETWIN_URL)
@@ -136,35 +138,21 @@ def user2_token(client: Eternaltwin) -> Token:
     return _get_token(client, ETWIN_USER2_USERNAME, ETWIN_USER2_PASSWORD)
 
 
-@pytest.fixture
-def hs256_key():
+@pytest.fixture(scope="session")
+def hs256_key(scope="session"):
     """Fixture for HS256 symmetric key."""
-    return HS256Key("test_secret_key_for_hmac_sha256")
+    return HS256Key(secrets.token_hex(32))
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def rs256_key():
     """Fixture for RS256 asymmetric key."""
-    private_key = """-----BEGIN RSA PRIVATE KEY-----
-MIICWwIBAAKBgQDDbr5Fwr3mYkrZDrnhtWWEcBLENkcDiS0vTlPPk0lBIGPjBi4H
-kvPeCYYwHXVW5RRtrC6p7kuvT+IL3/cFFnrXAXHlpmqk9whDuf/j6dBg4lTFrdRA
-wEc2Cn7NAFF0mOiafJnvwWIeeVwCWHshNCbGJxFOVtaNVMFZGR6sJ8OydwIDAQAB
-AoGAYEiPNY9cP8TtW0MGEU1tVnJgzIpxMizDNitA32ORE6UBkTfaNaEQxLOsiMf6
-p3T1O5M46j+cyiJxG6ib6sXIfocqsDDdeDwf3HZCCDqWHfFFOcKQkHml3iHEXo5Y
-7Rj5Pczty3+Men198GmeloQnz6xkaJQnJj8plhfmNeYTyQECQQD7mVvlo6nF+bcx
-xzGkX9ql9M0Nva+4sLDQIA5tqU5F1D4jGtM0D8Yu6wQxQsLiVgl5a/oytlVCdfZs
-afFV4+01AkEAxtngDUqWhFapybE5RnewCl4bk5L9ihMpEYB8dUsSZIkkvJuWe+D7
-GQbUOuQiKsGcS85DtWF39T7I6R6sg6cSewJAIl7z/+4YzlPr49/7dyIlI5DKxnrI
-W6m/rd8DOZXsfHufNXp/qdgR0e0HOJePOg5Y4v6OQolIInks/eiHMJ2flQJAATXs
-XkhY+D9K01aH4bzyzm1aP6DCeGe7dUbR+yjU2NXY6mkMFn79KF7ZRe6Dor0BBZkg
-4mbQgya5tGmiZT7MJwJANynVEMsgGd04wyKJZE9oT921dbPGjcbnW8yZQjH7Rw35
-WiU3bltbteU3snWlYZ7KMdI4hFL1n5TQfnYU8ZuNXQ==
------END RSA PRIVATE KEY-----"""
-    public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQDDbr5Fwr3mYkrZDrnhtWWEcBLENkcDiS0vTlPPk0lBIGPjBi4HkvPeCYYwHXVW5RRtrC6p7kuvT+IL3/cFFnrXAXHlpmqk9whDuf/j6dBg4lTFrdRAwEc2Cn7NAFF0mOiafJnvwWIeeVwCWHshNCbGJxFOVtaNVMFZGR6sJ8Oydw=="
+    private_key = (Path(__file__).parent / "keys" / "test_private.pem").read_text()
+    public_key = (Path(__file__).parent / "keys" / "test_public.pub").read_text()
     return RS256Key(public_key, private_key)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def es256_key():
     """Fixture for ES256 asymmetric key."""
     private_key = """-----BEGIN EC PRIVATE KEY-----
@@ -179,36 +167,16 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENPSoreSW9bZC9XJimHF42SoPCSt/
     return ES256Key(public_key, private_key)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ps256_key():
     """Fixture for PS256 asymmetric key (uses same RSA keys as RS256)."""
-    private_key = """-----BEGIN PRIVATE KEY-----
-MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAL5BtN58BsApeRZL
-gkK4g95Vf3afsKsKJ05W0gWcvYTUN1yFo0tcd/Brl0WLd1vjslosjudM4UhizoAn
-7pJaSHcliWv2miS/M74bFE30WM7vStndtd2+NEDFDfS9dywz4AfYP2wQALNUwKVH
-p2jAWoZg4C/Rg9pKg+wvMoE8WbBTAgMBAAECgYB9zyNUT/2Cyqn4lTvw9OS2fCEK
-hzSjFdbCFeVRssEb+d0WAITny6DASdVBNqVaDSqeOILS7uK2JChbVIyNGMh7ZUud
-gIsQdPtKMNVG6IHqZBpj8Q46eVwFNebh/PpbARcX4ovOwKbSRi6wHWWYTO8jyIrL
-TaHbqPFFQc6/qeoUQQJBAOKaJ2Yo3Pi2BPhtr0M6trkV86ZQ9ATmedhgmUIyoscf
-guQ1on95zSsn+Fox3mwtLLm3osR7QJUbPPTPI9OsaiECQQDW8HTUue7Umtm8hkkT
-BLxQPa1W3F13RTJJx6aiNjlKhnIlm3gB1FS7uQuPb6KLkPiEWAoxOFi2hRdLbKj2
-wJPzAkEAwAsRVP1QuN/aOokKvhlmflniUpPNGtIRdZX4jSfI2KUWEz55Zzvc67RG
-QHp/HIL0orjFE2u5giTBdmCO5nf6wQJASdx9uXBfky3XbwKSb/erosNfIr89WzQr
-MNFsAMgzbdm/tg6z8aT+rTfMsjDBocZisE/0yK89RRN9Ssz/TzQkYwJAE9eLzRaF
-KR7iN341M7hISnG5Jh9Y/XKjYFj/gsRrZnWrIpOOIWseORRkp4y3RXSu2MCO+kz8
-j4us1Ig4DACwXw==
------END PRIVATE KEY-----
-"""
-    public_key = """-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC+QbTefAbAKXkWS4JCuIPeVX92
-n7CrCidOVtIFnL2E1DdchaNLXHfwa5dFi3db47JaLI7nTOFIYs6AJ+6SWkh3JYlr
-9pokvzO+GxRN9FjO70rZ3bXdvjRAxQ30vXcsM+AH2D9sEACzVMClR6dowFqGYOAv
-0YPaSoPsLzKBPFmwUwIDAQAB
------END PUBLIC KEY-----"""
+
+    private_key = (Path(__file__).parent / "keys" / "test_private.pem").read_text()
+    public_key = (Path(__file__).parent / "keys" / "test_public.pem").read_text()
     return PS256Key(public_key, private_key)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def eddsa_key():
     """Fixture for EdDSA asymmetric key."""
     private_key = """-----BEGIN PRIVATE KEY-----
