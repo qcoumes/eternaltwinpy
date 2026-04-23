@@ -1,4 +1,5 @@
 [![PyPI Version](https://badge.fury.io/py/eternaltwinpy.svg)](https://badge.fury.io/py/eternaltwinpy)
+[![Documentation Status](https://readthedocs.org/projects/eternaltwinpy/badge/?version=latest)](https://eternaltwinpy.readthedocs.io/en/latest/?badge=latest)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-brightgreen.svg)](#) 
 [![License AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-brightgreen.svg)](https://github.com/qcoumes/eternaltwinpy/blob/master/LICENSE)
 ![Tests](https://github.com/qcoumes/eternaltwinpy/workflows/Tests/badge.svg)
