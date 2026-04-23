@@ -1,5 +1,5 @@
 [project]
-name = "eternaltwin"
+name = "eternaltwinpy"
 version = "1.0.0"
 description = "Python client for the Eternal-Twin API"
 authors = [
