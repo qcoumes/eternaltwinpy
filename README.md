@@ -29,13 +29,13 @@ You can view the full documentation at [https://eternaltwinpy.readthedocs.io/en/
 Install via `pip`:
 
 ```bash
-pip install eternaltwinpy
+pip install eternaltwin
 ```
 
 or `poetry`:
 
 ```bash
-poetry add eternaltwinpy
+poetry add eternaltwin
 ```
 
 ##  Quickstart

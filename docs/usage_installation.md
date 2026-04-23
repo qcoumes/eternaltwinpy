@@ -8,11 +8,11 @@
 Install via `pip`:
 
 ```bash
-pip install eternaltwinpy
+pip install eternaltwin
 ```
 
 or `poetry`:
 
 ```bash
-poetry add eternaltwinpy
+poetry add eternaltwin
 ```
