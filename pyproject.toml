@@ -1,6 +1,6 @@
 [project]
 name = "eternaltwin"
-version = "0.1.0"
+version = "1.0.0"
 description = "Python client for the Eternal-Twin API"
 authors = [
     {name = "C. Quentin",email = "coumes.quentin@gmail.com"}
