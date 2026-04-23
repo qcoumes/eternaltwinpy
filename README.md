@@ -1,7 +1,7 @@
 [![PyPI Version](https://badge.fury.io/py/eternaltwinpy.svg)](https://badge.fury.io/py/eternaltwinpy)
-![Tests](https://github.com/qcoumes/eternaltwinpy/workflows/Tests/badge.svg)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-brightgreen.svg)](#) 
 [![License AGPL-3.0-or-later](https://img.shields.io/badge/license-AGPL--3.0--or--later-brightgreen.svg)](https://github.com/qcoumes/eternaltwinpy/blob/master/LICENSE)
+![Tests](https://github.com/qcoumes/eternaltwinpy/workflows/Tests/badge.svg)
 [![codecov](https://codecov.io/gh/qcoumes/eternaltwinpy/graph/badge.svg?token=PLpPwU6540)](https://codecov.io/gh/qcoumes/eternaltwinpy)
 [![CodeFactor](https://www.codefactor.io/repository/github/qcoumes/eternaltwinpy/badge)](https://www.codefactor.io/repository/github/qcoumes/eternaltwinpy)
 
