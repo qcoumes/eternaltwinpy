@@ -202,7 +202,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   publish:
-    needs: [ autoflake, black, isort, pycodestyle, pydocstyle, mypy, bandit ]
+    needs: [ autoflake, black, isort, pycodestyle, pydocstyle, mypy, bandit, test ]
     if: github.event_name == 'release' && github.event.action == 'published'
     runs-on: ubuntu-latest
     continue-on-error: true
